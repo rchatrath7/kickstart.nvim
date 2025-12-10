@@ -73,11 +73,13 @@ vim.opt.scrolloff = 10
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
+vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show line diagnostics' })
 vim.keymap.set('n', '<leader>.', vim.lsp.buf.code_action)
 vim.keymap.set('n', '<leader>h', vim.lsp.buf.hover)
 vim.keymap.set('v', '>', '>gv')
 vim.keymap.set('v', '<', '<gv')
 vim.keymap.set('n', '<leader>dd', '"_dd')
+vim.keymap.set('n', '<leader>p', '"0p')
 
 -- Clear highlights on search when pressing <Esc> in normal mode
 --  See `:help hlsearch`
@@ -164,9 +166,10 @@ require('lazy').setup({
   --    require('gitsigns').setup({ ... })
   --
   -- See `:help gitsigns` to understand what the configuration keys do
-  { -- Adds git related signs to the gutter, as well as utilities for managing changes
+  {
     'lewis6991/gitsigns.nvim',
     opts = {
+      -- Using opts = lazy.nvim automatically calls setup(opts) for you
       signs = {
         add = { text = '+' },
         change = { text = '~' },
@@ -174,6 +177,25 @@ require('lazy').setup({
         topdelete = { text = '‾' },
         changedelete = { text = '~' },
       },
+      on_attach = function(bufnr)
+        local gitsigns = require 'gitsigns'
+
+        vim.keymap.set('n', ']c', function()
+          if vim.wo.diff then
+            vim.cmd.normal { ']c', bang = true }
+          else
+            gitsigns.nav_hunk 'next'
+          end
+        end, { buffer = bufnr, desc = 'Next hunk/change' })
+
+        vim.keymap.set('n', '[c', function()
+          if vim.wo.diff then
+            vim.cmd.normal { '[c', bang = true }
+          else
+            gitsigns.nav_hunk 'prev'
+          end
+        end, { buffer = bufnr, desc = 'Previous hunk/change' })
+      end,
     },
   },
 
@@ -827,6 +849,7 @@ require('lazy').setup({
       --  Check out: https://github.com/echasnovski/mini.nvim
     end,
   },
+
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
@@ -853,6 +876,26 @@ require('lazy').setup({
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
   },
 
+  {
+    'nvim-treesitter/nvim-treesitter-context',
+    dependencies = { 'nvim-treesitter/nvim-treesitter' },
+    event = 'VeryLazy',
+    opts = {
+      enable = false,
+      max_lines = 3,
+      separator = '─',
+    },
+    keys = {
+      { '<leader>k', '<cmd>TSContext toggle<cr>', desc = 'Toggle treesitter context' },
+      {
+        '<leader>[c',
+        function()
+          require('treesitter-context').go_to_context(vim.v.count1)
+        end,
+        desc = 'Go to parent context',
+      },
+    },
+  },
   {
     'ThePrimeagen/harpoon',
     branch = 'harpoon2',
