@@ -882,7 +882,7 @@ require('lazy').setup({
     event = 'VeryLazy',
     opts = {
       enable = false,
-      max_lines = 3,
+      max_lines = 0,
       separator = '─',
     },
     keys = {
